@@ -1,6 +1,12 @@
 import { v2 as cloudinary } from "cloudinary";
 import productModel from "../models/productModel.js";
 
+cloudinary.config({
+  cloud_name: process.env.CLOUDINARY_NAME,
+  api_key: process.env.CLOUDINARY_API_KEY,
+  api_secret: process.env.CLOUDINARY_SECRET_KEY,
+});
+
 //Function to add product
 const addProduct = async (req, res) => {
   try {
@@ -66,10 +72,24 @@ const listProducts = async (req, res) => {
 //Function to remove product
 const removeProduct = async (req, res) => {
   try {
-    await productModel.findByIdAndDelete(req.body.id);
-    res.json({ success: true, message: "Product removed" });
+    const product = await productModel.findByIdAndDelete(req.body.id);
+
+    if (!product) {
+      return res.json({
+        success: false,
+        message: "Product not found",
+      });
+    }
+
+    res.json({
+      success: true,
+      message: "Product removed",
+    });
   } catch (error) {
-    res.json({ success: false, message: error.message });
+    res.json({
+      success: false,
+      message: error.message,
+    });
   }
 };
 
@@ -77,7 +97,10 @@ const removeProduct = async (req, res) => {
 const singleProduct = async (req, res) => {
   try {
     const { productId } = req.body;
+
     const product = await productModel.findById(productId);
+
+    res.json({ success: true, product });
   } catch (error) {
     res.json({ success: false, message: error.message });
   }
